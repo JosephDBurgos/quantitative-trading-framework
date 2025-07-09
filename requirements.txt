@@ -12,3 +12,4 @@ streamlit
 dash
 Flask
 nbconvert
+pytest
