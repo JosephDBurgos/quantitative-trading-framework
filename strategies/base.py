@@ -1,14 +1,14 @@
-class StrategyBase:
-    def generate_signals(self, data):
-        """
-        Generate trading signals based on the provided data.
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError("Subclasses should implement this method.")
+from abc import ABC, abstractmethod
 
-    def backtest(self, data):
-        """
-        Backtest the strategy using the provided historical data.
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError("Subclasses should implement this method.")
+class StrategyBase(ABC):
+    def __init__(self, data):
+        self.data = data
+        self.signals = None
+
+    @abstractmethod
+    def generate_signals(self):
+        pass
+
+    def backtest(self):
+        # Later: optionally implement basic backtest logic here
+        pass
