@@ -1,15 +1,14 @@
 import os
-from flask import signals
 import pandas as pd
 from utils.assets_config import ASSETS, INTERVALS
 from utils.data_loader import load_asset_data
-from strategies.moving_average import MovingAverageStrategy
+from strategies.buy_and_hold import BuyAndHoldStrategy
 
-def generate_moving_average_reports():
+def generate_buy_and_hold_reports():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
-    STRATEGY_DIR = os.path.join(RESULTS_DIR, "moving_average")
+    STRATEGY_DIR = os.path.join(RESULTS_DIR, "buy_and_hold")
     os.makedirs(STRATEGY_DIR, exist_ok=True)
 
     results = []
@@ -43,12 +42,11 @@ def generate_moving_average_reports():
                 if data.empty or 'Close' not in data.columns or not pd.api.types.is_numeric_dtype(data['Close']):
                     print(f"Skipping {asset} {interval_name}: 'Close' column missing or not numeric.")
                     continue
-                strategy = MovingAverageStrategy(data)
+                strategy = BuyAndHoldStrategy(data)
                 signals = strategy.generate_signals()
                 signals['daily_returns'] = data['Close'].pct_change()
-                signals['strategy_returns'] = signals['signal'].shift(1) * signals['daily_returns']
-                total_return = (1 + signals['strategy_returns']).prod() - 1
-                num_trades = signals['positions'].abs().sum()
+                total_return = (1 + signals['daily_returns']).prod() - 1
+                num_trades = 1  # Buy and hold: only one trade
                 results.append({
                     "asset": asset,
                     "interval": interval_name,
@@ -60,7 +58,7 @@ def generate_moving_average_reports():
 
     # Save summary
     df_results = pd.DataFrame(results)
-    df_results.to_csv(os.path.join(STRATEGY_DIR, "moving_average_summary.csv"), index=False)
+    df_results.to_csv(os.path.join(STRATEGY_DIR, "buy_and_hold_summary.csv"), index=False)
 
     if not df_results.empty:
         pivot = df_results.pivot(index="asset", columns="interval", values="total_return")
