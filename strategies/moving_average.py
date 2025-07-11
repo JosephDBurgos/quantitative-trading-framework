@@ -17,14 +17,13 @@ class MovingAverageStrategy(StrategyBase):
         long_mavg = data['Close'].rolling(window=self.long_window, min_periods=1).mean()
 
         signals = pd.DataFrame(index=data.index)
-        signals['signal'] = 0.0
         signals['short_mavg'] = short_mavg
         signals['long_mavg'] = long_mavg
 
-        signals.loc[signals.index[self.short_window:], 'signal'] = np.where(
-            signals['short_mavg'][self.short_window:] > signals['long_mavg'][self.short_window:], 1.0, 0.0
-        )
-        signals['positions'] = signals['signal'].diff()
+        # 1.0 when short > long, 0.0 otherwise (in or out of market)
+        signals['signal'] = np.where(signals['short_mavg'] > signals['long_mavg'], 1.0, 0.0)
+        # Entry/exit points: 1.0 = buy, -1.0 = sell
+        signals['positions'] = signals['signal'].diff().fillna(0.0)
 
         self.signals = signals
         return signals
